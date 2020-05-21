@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #define BALL_SIDE 12        //SIDE PIXES PARA D MAG LAPAW
-#define BALL_SPEED 4.0      // BALL SPEED
+#define BALL_SPEED 10.0      // BALL SPEED
 #define PLAYER_SIDE 40      //PLAYER SIDE
 #define PLAYER_SPEED 12     //PLAYER SPEED
 #define ANGLE 45;       //ANGLE
@@ -30,7 +30,7 @@ typedef struct {        // STRUCTURE FOR COORDINATES
 } coords;           // coords datatype
 int GetRandRange()
 {
-    return(rand()%50+(-15));
+    return(rand()%50+(0));
 }
 int width, height ;     // WIDTH & HEIGHT
 int cw, ch;         //current
@@ -43,17 +43,16 @@ coords brick;           //bricks
 int numlines = 4;
 int bricksperline = 10;
 int brickspace = 50;
-int showbrick[40];          // show brick 1 - true , 0 - false
+int showbrick[4][10];          // show brick 1 - true , 0 - false
 /*---------------------------------------------------------------------------------*/
 /*START OF BRICKS*/
 void DrawBricks(){
-int i,j;
 int x1,y1,x2,y2;
-    for (j=0; j<numlines; j++)
+    for (int j=0; j<numlines; j++)
         {
-           for (i=0; i<bricksperline; i++)
+           for (int i=0; i<bricksperline; i++)
                 {
-                if (showbrick[j*bricksperline+i]){
+                if (showbrick[j][i]){
                 x1 = brick.x;
                 y1 = brick.y;
                 x2 = x1 + PLAYER_SIDE;
@@ -67,29 +66,26 @@ int x1,y1,x2,y2;
 }
 void InitBricks()
 {
-    int i;
-    for (i=0; i<numlines*bricksperline; i++)
-      showbrick[i]=1;   // 1 as true
-}
-void CheckBricks()
-{
-    int i,j,x,y;
-    for (j=0; j<numlines; j++)
+    for (int j=0; j<numlines; j++)
     {
-      for (i=0; i<bricksperline; i++)
-      {
-        if (showbrick[j*bricksperline+i])
-        {
-          y= 5 + j*(brickspace+PLAYER_SIDE);
-          x= 5 +i*(brickspace+PLAYER_SIDE);
-          if (ball.y>=(y-BALL_SIDE) && ball.y<(y+PLAYER_SIDE) &&
-              ball.x>=(x-BALL_SIDE) && ball.x<(x+PLAYER_SIDE))
-          {
-            showbrick[j*bricksperline+i]= 0;
-          }
-        }
-      }
+       for (int i=0; i<bricksperline; i++)
+            {
+                showbrick[j][i]=1;   // 1 as true
+            }
+        
     }
+}
+
+void CheckBricks(coords bd)
+{
+  {
+      if (bd.y >= 300)
+      {
+          int y = (int) ((floor(bd.y)-300)/50);
+          int x = (int) (floor(bd.x)/50);
+          showbrick[3-y][x]= 0;
+      }
+  }
 }
 /*END OF BRICKS*/
 /* START OF BALL*/
@@ -99,39 +95,16 @@ int reverse(int i){
 double radian(double deg){
     return deg * (3.14159265/ 180);
 }
-void bounce_x(){
-//    int angle = angles[rand() % 4];
-  //  int angle = ANGLE;
-    int angle = GetRandRange();
-    float x = sqrt(2) * sin(radian(90 - angle));
-    float y = sqrt(2) * sin(radian(angle));
-    if(ball_direction.x > 0){
-        x *= -1;
-    }
-    /*if(ball_direction.y > 0){
-        y *= -1;
-    }*/
-    ball_direction.x = x;
-    ball_direction.y = y;
+void bounce_x()
+{
+    ball_direction.x *=-1;
 }
-void bounce_y(){
-//    int angle = angles[rand() % 4];
-    //int angle = ANGLE;
-    int angle = GetRandRange();
-    float x = sqrt(2) * sin(radian(90 - angle));
-    float y = sqrt(2) * sin(radian(angle));
-    /*if(ball_direction.x > 0){
-        x *= -1;
-    }*/
-    if(ball_direction.y > 0){
-        y *= -1;
-    }
-    ball_direction.x = x;
-    ball_direction.y = y;
+void bounce_y()
+{
+    ball_direction.y *= -1;
 }
 void bounce(){ //BOUNCES BALL BACK?
-//    int angle = angles[rand() % 4];
-   // int angle = ANGLE;
+
     int angle = GetRandRange();
     float x = sqrt(2) * sin(radian(90 - angle));
     float y = sqrt(2) * sin(radian(angle));
@@ -176,7 +149,7 @@ void updateBallPosition(){
         //showbrick[j*bricksperline+i]= 0;
         //int s = ball.x;
         //showbrick[s] = 0;
-        CheckBricks();
+        CheckBricks(ball);
         glutPostRedisplay();
     }}
 }
@@ -230,7 +203,7 @@ void myDisplay(){   //DISPLAY FUNC
 void myReshape(int w,int h){    // RESHAPE FUNC
     cw = w;
     ch = h;
-    glViewport((cw-width)/2,(ch-height)/2,width,height);
+    glViewport((cw-width),(ch-height),width,height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0,width,0,height);
@@ -295,8 +268,8 @@ void init(){    // INITIALIZE
 int main(int argc, char** argv){    //MAIN
     //srand(time(0));
     glutInit(&argc,argv);
-    width = 500;
-    height = 500;
+    width = 499;
+    height = 499;
     glutInitWindowSize(width,height);
     glutInitWindowPosition(100,100);
     glutCreateWindow("BRicK-OUT");
