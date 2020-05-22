@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #define BALL_SIDE 12        //SIDE PIXES PARA D MAG LAPAW
-#define BALL_SPEED 10.0      // BALL SPEED
+#define BALL_SPEED 30.0      // BALL SPEED
 #define PLAYER_SIDE 40      //PLAYER SIDE
 #define PLAYER_SPEED 12     //PLAYER SPEED
 #define ANGLE 45;       //ANGLE
@@ -44,6 +44,7 @@ int numlines = 4;
 int bricksperline = 10;
 int brickspace = 50;
 int showbrick[4][10];          // show brick 1 - true , 0 - false
+int score = 0;
 /*---------------------------------------------------------------------------------*/
 /*START OF BRICKS*/
 void DrawBricks(){
@@ -76,6 +77,8 @@ void InitBricks()
     }
 }
 
+
+
 void CheckBricks(coords bd)
 {
   {
@@ -83,7 +86,16 @@ void CheckBricks(coords bd)
       {
           int y = (int) ((floor(bd.y)-300)/50);
           int x = (int) (floor(bd.x)/50);
-          showbrick[3-y][x]= 0;
+          if (showbrick[3-y][x] == 1)
+          {
+              showbrick[3-y][x] = 0;
+              score += 1;
+              if (score == 40)
+              {
+                  printf("WON");
+              }
+          }
+          
       }
   }
 }
@@ -97,11 +109,22 @@ double radian(double deg){
 }
 void bounce_x()
 {
-    ball_direction.x *=-1;
+    if (ball_direction.x == 0 || ball_direction.x == 180)
+    {
+        ball_direction.x *=-0.9;
+    }
+    else
+        ball_direction.x *=-1;
 }
 void bounce_y()
 {
-    ball_direction.y *= -1;
+    if (ball_direction.y == 90 || ball_direction.y == -90)
+    {
+        ball_direction.y *=-0.9;
+    }
+
+    else
+        ball_direction.y *= -1;
 }
 void bounce(){ //BOUNCES BALL BACK?
 
@@ -109,10 +132,20 @@ void bounce(){ //BOUNCES BALL BACK?
     float x = sqrt(2) * sin(radian(90 - angle));
     float y = sqrt(2) * sin(radian(angle));
     if(ball_direction.x > 0){
-        x *= -1;
+        if (ball_direction.x == 0 || ball_direction.x == 180)
+        {
+            ball_direction.x *=-0.9;
+        }
+        else
+            x *= -1;
     }
     if(ball_direction.y > 0){
-        y *= -1;
+        if (ball_direction.y == 90 || ball_direction.y == -90)
+        {
+            y *=-0.9;
+        }
+        else
+            y *= -1;
     }
     ball_direction.x = x;
     ball_direction.y = y;
@@ -123,38 +156,29 @@ void updateBallPosition(){
     ball.y += BALL_SPEED * bd.y;
     if(ball.x < 0){
         ball.x = 0;
-        //ball_direction.x = reverse(bd.x);
         bounce_x();
     }
     if(ball.x + BALL_SIDE > width){
         ball.x = width -  BALL_SIDE;
-        //ball_direction.x = reverse(bd.x);
         bounce_x();
     }
     if(ball.y < 0){
         ball.y = 0;
-        //ball_direction.y = reverse(bd.y);
         bounce_y();
     }
     if(ball.y + BALL_SIDE > height){
         ball.y = height - BALL_SIDE;
-        //ball_direction.y = reverse(bd.y);
         bounce_y();
     }
     glReadPixels(ball.x-1,ball.y-1,1,1,GL_RGB,GL_FLOAT,pixel_color);
-    //if(pixel_color[0] != colors[WHITE][0] && pixel_color[1] != colors[WHITE][1] && pixel_color[2] != colors[WHITE][2])        //{
     if(pixel_color[0] != colors[WHITE][0]){
     if(pixel_color != colors[WHITE]){
         bounce();
-        //showbrick[j*bricksperline+i]= 0;
-        //int s = ball.x;
-        //showbrick[s] = 0;
         CheckBricks(ball);
         glutPostRedisplay();
     }}
 }
 void displayBall(){
-    int i;
     int x1,y1,x2,y2;
         x1 = ball.x;    //struct
         y1 = ball.y;
@@ -200,6 +224,27 @@ void myDisplay(){   //DISPLAY FUNC
     DrawBricks();
     glFlush();
 }
+
+void DisplayWinScreen()
+{
+    unsigned char string[] = "YOU WON";
+    int w;
+    w = glutBitmapLength(GLUT_BITMAP_8_BY_13, string);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0,1.0,1.0);
+    glRectf(0,0,width,height);
+    float x = .5; /* Centre in the middle of the window */
+    glRasterPos2f(x - (float) width / 2, 0.);
+//    glRasterPos2f(0., 0.);
+    glColor3f(1., 0., 0.);
+    int len = strlen(string);
+    for (int i = 0; i < len; i++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, string);
+    }
+    glFlush();
+}
+
 void myReshape(int w,int h){    // RESHAPE FUNC
     cw = w;
     ch = h;
@@ -217,10 +262,16 @@ void myIdle(){  //IDLE
     if(player_moving){
         movePlayer();
     }
+    if(score >= 40)
+    {
+        glutDisplayFunc(DisplayWinScreen);
+    }
     glutPostRedisplay();
 }
 void myKeyboard(unsigned char key, int x, int y){   //KEYBOARD
     coords move_direction;
+    move_direction.x=0.0;
+    move_direction.y=0.0;
     int change_direction = 1;
     if(key == 'a' || key == 'A'){
         //left
@@ -272,7 +323,7 @@ int main(int argc, char** argv){    //MAIN
     height = 499;
     glutInitWindowSize(width,height);
     glutInitWindowPosition(100,100);
-    glutCreateWindow("BRicK-OUT");
+    glutCreateWindow("Ball Game");
     glutDisplayFunc(myDisplay);
     glutReshapeFunc(myReshape);
     glutKeyboardFunc(myKeyboard);
